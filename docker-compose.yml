@@ -1,12 +1,48 @@
 services:
+  # --- Database first (dependency)
+  db:
+    image: postgres:18.1-alpine3.22
+
+    environment:
+      POSTGRES_DB: devdb
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: changeme
+
+    volumes:
+      - recipe-app-api-dev-db-data:/var/lib/postgresql/18/docker
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devuser -d devdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- Application
   app:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        - DEV=true
+        DEV: "true"
+
+    command: python manage.py runserver 0.0.0.0:8000
+
     ports:
       - "8000:8000"
+
     volumes:
       - ./app:/app
-    command: python manage.py runserver 0.0.0.0:8000
+
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: devdb
+      DB_USER: devuser
+      DB_PASSWORD: changeme
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  recipe-app-api-dev-db-data:
