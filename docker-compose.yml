@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: changeme
 
     volumes:
-      - recipe-app-api-dev-db-data:/var/lib/postgresql/18/docker
+      - dev-db-data:/var/lib/postgresql
 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U devuser -d devdb"]
@@ -45,4 +45,4 @@ services:
         condition: service_healthy
 
 volumes:
-  recipe-app-api-dev-db-data:
+  dev-db-data:
