@@ -5,6 +5,7 @@ from django.utils.translation import gettext as _
 from core import models
 
 
+@admin.register(models.User)
 class UserAdmin(BaseUserAdmin):
     ordering = ['id']
     list_display = ['email', 'name']
@@ -27,4 +28,19 @@ class UserAdmin(BaseUserAdmin):
     readonly_fields = ['last_login']
 
 
-admin.site.register(models.User, UserAdmin)
+@admin.register(models.Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    list_display = (
+        "title",
+        "user",
+        "slug",
+        "time_minutes",
+        "price",
+        "created_at",
+    )
+    list_filter = ("user", "created_at")
+    search_fields = ("title", "description", "slug")
+    readonly_fields = ("slug", "created_at", "updated_at")
+    ordering = ("-created_at",)
+    list_select_related = ("user",)
+    # prepopulated_fields = {"slug": ("title",)}
