@@ -44,3 +44,18 @@ class RecipeAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
     list_select_related = ("user",)
     # prepopulated_fields = {"slug": ("title",)}
+
+
+@admin.register(models.Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "user",
+        "slug",
+        "created_at"
+    )
+    list_filter = ("user", "created_at")
+    search_fields = ("name", "slug")
+    readonly_fields = ("slug", "created_at", "updated_at")
+    ordering = ("-created_at",)
+    list_select_related = ("user",)

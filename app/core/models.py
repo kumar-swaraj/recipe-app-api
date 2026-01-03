@@ -71,6 +71,7 @@ class Recipe(TimeStampedModel):
     time_minutes = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=5, decimal_places=2)
     link = models.CharField(max_length=255, blank=True)
+    tags = models.ManyToManyField("Tag")
 
     class Meta:
         verbose_name = "Recipe"
@@ -87,6 +88,38 @@ class Recipe(TimeStampedModel):
             counter = 1
 
             while Recipe.objects.filter(slug=slug).exclude(pk=self.pk).exists(): # noqa
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+
+            self.slug = slug
+
+        super().save(*args, **kwargs)
+
+
+class Tag(TimeStampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="tags"
+        )
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
+
+    class Meta:
+        verbose_name = "Tag"
+        verbose_name_plural = "Tags"
+        ordering = ["-id"]
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name) or "tag"
+            slug = base_slug
+            counter = 1
+
+            while Tag.objects.filter(slug=slug).exclude(pk=self.pk).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
 
