@@ -32,6 +32,8 @@ services:
 
     volumes:
       - ./app:/app
+      - dev-static-data:/vol/web/static
+      - dev-media-data:/vol/web/media
 
     environment:
       DB_HOST: db
@@ -46,3 +48,5 @@ services:
 
 volumes:
   dev-db-data:
+  dev-static-data:
+  dev-media-data:

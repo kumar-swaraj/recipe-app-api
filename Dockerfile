@@ -5,10 +5,19 @@ LABEL maintainer="kumarswaraj"
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/py/bin:$PATH"
 
-# --- build-time args
 ARG DEV=false
 
-# --- install python deps first (best cache leverage)
+# --- Pillow + build deps (temporary)
+RUN apk add --no-cache --virtual .build-deps \
+  build-base \
+  jpeg-dev \
+  zlib-dev \
+  freetype-dev \
+  lcms2-dev \
+  libwebp-dev \
+  tiff-dev
+
+# --- install python deps
 COPY requirements.txt /tmp/requirements.txt
 COPY requirements.dev.txt /tmp/requirements.dev.txt
 
@@ -18,20 +27,24 @@ RUN python -m venv /py && \
   if [ "$DEV" = "true" ]; then \
   /py/bin/pip install -r /tmp/requirements.dev.txt ; \
   fi && \
-  rm -rf /tmp
+  rm -rf /tmp && \
+  apk del .build-deps
 
 # --- app code
 COPY app /app
 WORKDIR /app
 
-# --- entrypoint (copied after deps to avoid cache bust)
+# --- entrypoint
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 EXPOSE 8000
 
-# --- non-root user LAST
-RUN adduser -D -H -S django-user
+RUN adduser -D -H -S django-user && \
+  mkdir -p /vol/web/static /vol/web/media && \
+  chown -R django-user /vol && \
+  chmod -R 755 /vol
+
 USER django-user
 
 ENTRYPOINT ["/entrypoint.sh"]
