@@ -59,3 +59,17 @@ class TagAdmin(admin.ModelAdmin):
     readonly_fields = ("slug", "created_at", "updated_at")
     ordering = ("-created_at",)
     list_select_related = ("user",)
+
+
+@admin.register(models.Ingredient)
+class IngredientAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "user",
+        "created_at"
+    )
+    list_filter = ("user", "created_at")
+    search_fields = ("name",)
+    readonly_fields = ("created_at", "updated_at")
+    ordering = ("-created_at",)
+    list_select_related = ("user",)

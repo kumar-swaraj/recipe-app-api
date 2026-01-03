@@ -1,6 +1,18 @@
 from rest_framework import serializers
 
-from core.models import Recipe, Tag
+from core.models import Recipe, Tag, Ingredient
+
+
+class IngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = [
+            "id",
+            "name",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -18,6 +30,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, required=False)
+    ingredients = IngredientSerializer(many=True, required=False)
 
     class Meta:
         model = Recipe
@@ -25,15 +38,17 @@ class RecipeSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "slug",
-            "time_minutes",
             "price",
-            "link",
+            "time_minutes",
+            "ingredients",
             "tags",
+            "link",
         ]
         read_only_fields = ["id", "slug"]
 
     def create(self, validated_data):
         tags = validated_data.pop("tags", [])
+        ingredients = validated_data.pop("ingredients", [])
         recipe = Recipe.objects.create(**validated_data)
         auth_user = self.context["request"].user
         for tag in tags:
@@ -43,10 +58,18 @@ class RecipeSerializer(serializers.ModelSerializer):
             )
             recipe.tags.add(tag_obj)
 
+        for ingredient in ingredients:
+            ingredient_obj, created = Ingredient.objects.get_or_create(
+                user=auth_user,
+                **ingredient
+            )
+            recipe.ingredients.add(ingredient_obj)
+
         return recipe
 
     def update(self, instance, validated_data):
         tags = validated_data.pop("tags", None)
+        ingredients = validated_data.pop("ingredients", None)
         instance = super().update(instance, validated_data)
 
         if tags is not None:
@@ -59,6 +82,17 @@ class RecipeSerializer(serializers.ModelSerializer):
                     **tag
                 )
                 instance.tags.add(tag_obj)
+
+        if ingredients is not None:
+            auth_user = self.context["request"].user
+            instance.ingredients.clear()
+
+            for ingredient in ingredients:
+                ingredient_obj, _ = Ingredient.objects.get_or_create(
+                    user=auth_user,
+                    **ingredient
+                )
+                instance.ingredients.add(ingredient_obj)
 
         return instance
 

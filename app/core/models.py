@@ -72,6 +72,7 @@ class Recipe(TimeStampedModel):
     price = models.DecimalField(max_digits=5, decimal_places=2)
     link = models.CharField(max_length=255, blank=True)
     tags = models.ManyToManyField("Tag")
+    ingredients = models.ManyToManyField("Ingredient")
 
     class Meta:
         verbose_name = "Recipe"
@@ -126,3 +127,20 @@ class Tag(TimeStampedModel):
             self.slug = slug
 
         super().save(*args, **kwargs)
+
+
+class Ingredient(TimeStampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="ingredients"
+        )
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = "Ingredient"
+        verbose_name_plural = "Ingredients"
+        ordering = ["-id"]
+
+    def __str__(self):
+        return self.name
