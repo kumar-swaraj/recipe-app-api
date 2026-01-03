@@ -42,6 +42,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             "time_minutes",
             "ingredients",
             "tags",
+            "image",
             "link",
         ]
         read_only_fields = ["id", "slug"]
@@ -110,3 +111,11 @@ class RecipeDetailSerializer(RecipeSerializer):
             "updated_at"
         ]
         read_only_fields = RecipeSerializer.Meta.read_only_fields + ["created_at", "updated_at"] # noqa
+
+
+class RecipeImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ["id", "image"]
+        read_only_fileds = ["id"]
+        extra_kwargs = {"image": {"required": True}}
