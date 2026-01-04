@@ -7,15 +7,18 @@ ENV PATH="/py/bin:$PATH"
 
 ARG DEV=false
 
-# --- Pillow + build deps (temporary)
+# --- build deps for Pillow + uWSGI (temporary)
 RUN apk add --no-cache --virtual .build-deps \
   build-base \
+  linux-headers \
   jpeg-dev \
   zlib-dev \
   freetype-dev \
   lcms2-dev \
   libwebp-dev \
   tiff-dev
+
+RUN apk add --no-cache su-exec
 
 # --- install python deps
 COPY requirements.txt /tmp/requirements.txt
@@ -45,6 +48,6 @@ RUN adduser -D -H -S django-user && \
   chown -R django-user /vol && \
   chmod -R 755 /vol
 
-USER django-user
-
 ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["uwsgi", "--socket", ":9000", "--workers", "4", "--master", "--enable-threads", "--module", "app.wsgi"]

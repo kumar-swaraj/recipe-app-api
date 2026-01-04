@@ -1,25 +1,24 @@
 #!/bin/sh
 set -e
 
-echo "Waiting for database..."
+echo "Fixing permissions..."
+chown -R django-user /vol
 
+echo "Waiting for database..."
 until python - <<EOF
 import psycopg
 psycopg.connect(
-    host="${DB_HOST}",
-    dbname="${DB_NAME}",
-    user="${DB_USER}",
-    password="${DB_PASSWORD}",
+    host="$DB_HOST",
+    dbname="$DB_NAME",
+    user="$DB_USER",
+    password="$DB_PASSWORD",
 )
 EOF
 do
   sleep 2
 done
 
-echo "Database is ready"
-
 python manage.py migrate --noinput
-
 python manage.py collectstatic --noinput
 
-exec "$@"
+exec su-exec django-user "$@"

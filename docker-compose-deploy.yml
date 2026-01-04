@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:18.1-alpine3.22
+    restart: always
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+    restart: always
+    volumes:
+      - static-data:/vol/web/static
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SECRET_KEY: ${DJANGO_SECRET_KEY}
+      ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  proxy:
+    build:
+      context: ./proxy
+    restart: always
+    depends_on:
+      - app
+    ports:
+      - "80:8000"
+    volumes:
+      - static-data:/vol/static
+
+volumes:
+  postgres-data:
+  static-data:
